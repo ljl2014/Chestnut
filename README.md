@@ -1,8 +1,6 @@
 # Chestnut
 
 基于Okhttp+Retrofit封装的网络框架，完美结合RxJava
-> 由于时间匆忙，部分功能未能完整测试<br>
-> 故不建议用于实际生产
 
 ## 功能实现
 - [x] 支持 HEAD / GET / POST / BODY 常规请求
@@ -130,8 +128,20 @@ Chestnut.init(new ChestnutClient.Builder(this)
 - BODY
 - UPLOAD
 
-通过获取与各请求方法相对应的`XXXProcess`进行详细请求参数设置<br>
-![](https://github.com/YTxx/Chestnut/raw/master/pic/process.jpg)
+通过获取与各请求方法相对应的`XXXProcess`进行详细请求参数设置
+
+| 方法名 | 含义 | 备注 |
+| :--- | :--- | :--- |
+|addHeader(String key, String value)|添加请求头参数|ALL|
+|addHeaders(Map`<String, String>` headers)|添加请求头参数Map|ALL|
+|addParameter(String key, Object value)|添加请求参数||
+|addParameters(Map`<String, Object>` parameters)|添加请求参数Map||
+|addBodyParameter(Object parameter)|添加Body参数|BODY|
+|addFileParameter(String key, File file, MediaType type)|添加上传文件|UPLOAD|
+|addFileParameter(String key, String name, File file, MediaType type)|添加上传文件|UPLOAD|
+|setUploadProgressListener(UploadProgressListener listener)|设置上传进度监听|UPLOAD|
+|Observable`<T>` request()|执行网络请求|ALL|
+|Observable`<T>` requestMain()|执行网络请求(主线程返回结果)|ALL|
 
 e.g.
 ```java
@@ -180,8 +190,23 @@ Chestnut.post("url", Entity.class)
 1. 可在初始化中设置默认缓存参数（模式、缓存时间）
 2. 可为每个请求设置独立缓存条件（初始化不开启默认缓存下仍可使用）
 
-通过获取与各请求方法相对应的`XXXCacheProcess`进行详细请求参数设置<br>
-![](https://github.com/YTxx/Chestnut/raw/master/pic/cacheprocess.png)
+通过获取与各请求方法相对应的`XXXCacheProcess`进行详细请求参数设置
+
+| 方法名 | 含义 | 备注 |
+| :--- | :--- | :--- |
+|addHeader(String key, String value)|添加请求头参数|ALL|
+|addHeaders(Map`<String, String>` headers)|添加请求头参数Map|ALL|
+|addParameter(String key, Object value)|添加请求参数||
+|addParameters(Map`<String, Object>` parameters)|添加请求参数Map||
+|addBodyParameter(Object parameter)|添加Body参数|BODY|
+|setCacheMode(CacheMode mode)|设置缓存模式|可选|
+|setGroupKe(String groupKey)|设置缓存分组key（预留）|可选|
+|setOwnKey(String ownKey)|设置缓存独立key（预留）|可选|
+|setCacheTime(long cacheTime)|设置缓存时间|可选|
+|setCacheTime(long cacheTime, TimeUnit timeUnit)|设置缓存时间|可选|
+|isSafe(boolean isSafe)|设置缓存安全模式|可选|
+|Observable`<T>` request()|执行网络请求|ALL|
+|Observable`<T>` requestMain()|执行网络请求(主线程返回结果)|ALL|
 
 e.g.
 ```java
@@ -314,7 +339,10 @@ Chestnut.getDownloadProgress("url")
 ## 参考项目
 - [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) : 一个基于okhttp的标准RESTful风格的网络框架
 - [RxDownload](https://github.com/ssseasonnn/RxDownload) : Multi-thread download tool based on RxJava.
- 
+
+## 个人声明
+> 由于时间匆忙，部分功能未能完整测试<br>
+> 故不建议用于实际生产
 
 ## License
 
