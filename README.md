@@ -34,7 +34,7 @@
 2.Add the dependency [![Chestnut](https://jitpack.io/v/YTxx/Chestnut.svg)](https://jitpack.io/#YTxx/Chestnut)
 ```groovy
     dependencies {
-    	        compile 'com.github.YTxx:Chestnut:1.1.0'
+    	        compile 'com.github.YTxx:Chestnut:1.1.1'
     	}
 ```
 
