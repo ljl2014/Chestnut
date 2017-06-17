@@ -1,5 +1,7 @@
 package cn.xxxl.chestnut.cache;
 
+import com.alibaba.fastjson.JSON;
+
 /**
  * @author Leon
  * @since 1.0.0
@@ -29,11 +31,11 @@ public class CacheInfo {
         this.id = id;
     }
 
-    public long getLocalExpire() {
+    long getLocalExpire() {
         return localExpire;
     }
 
-    public void setLocalExpire(long localExpire) {
+    void setLocalExpire(long localExpire) {
         this.localExpire = localExpire;
     }
 
@@ -52,5 +54,10 @@ public class CacheInfo {
     public void setMode(CacheMode mode) {
 
         this.mode = mode;
+    }
+
+    @Override
+    public String toString() {
+        return JSON.toJSONString(this);
     }
 }

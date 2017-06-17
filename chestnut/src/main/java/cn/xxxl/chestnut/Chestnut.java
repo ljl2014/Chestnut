@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
+import cn.xxxl.chestnut.cache.CacheInfo;
 import cn.xxxl.chestnut.client.ChestnutClient;
 import cn.xxxl.chestnut.download.ChestnutDownloadClient;
 import cn.xxxl.chestnut.download.entity.DownloadProgress;
@@ -13,6 +14,7 @@ import io.reactivex.Observable;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Consumer;
 import io.reactivex.plugins.RxJavaPlugins;
+import retrofit2.Retrofit;
 
 /**
  * @author Leon
@@ -50,6 +52,11 @@ public class Chestnut {
     public static Context getContext() {
         assertInitialized();
         return client.getContext();
+    }
+
+    public static Retrofit getRetrofit() {
+        assertInitialized();
+        return client.getRetrofit();
     }
 
     private static void assertInitialized() {
@@ -110,6 +117,18 @@ public class Chestnut {
         return client.upload(url, tClass);
     }
 
+
+    //#################### CACHE ####################
+    public static <T> Observable<T> cache(Observable<T> originObservable, CacheInfo cacheInfo,
+                                          final Class<T> tClass) {
+        assertInitialized();
+        return client.cache(originObservable, cacheInfo, tClass);
+    }
+
+    public static ChestnutClient.CacheInfoBuilder getCacheInfoBuilder(String url) {
+        assertInitialized();
+        return client.getCacheInfoBuilder(url);
+    }
 
     //#################### Download ####################
     public static Observable<DownloadProgress> download(@NonNull String url) {

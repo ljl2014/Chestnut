@@ -209,7 +209,7 @@ public class ChestnutClient {
         public Builder(Application app) {
             DataStorage.init(app);      //初始化数据库管理
             this.app = app;
-            this.cacheFile = new File(this.app.getExternalCacheDir().getPath());
+            this.cacheFile = this.app.getExternalCacheDir();
         }
 
         Builder(ChestnutClient client) {
@@ -264,6 +264,17 @@ public class ChestnutClient {
         }
 
         /**
+         * 设置连接超时时间
+         *
+         * @param timeout  超时时间（默认：15,单位：秒）
+         * @param timeUnit 时间单位
+         */
+        public Builder setConnectTimeout(long timeout, TimeUnit timeUnit) {
+            this.connectTimeout = timeUnit.toSeconds(timeout);
+            return this;
+        }
+
+        /**
          * 设置读取超时时间
          *
          * @param timeout 超时时间（默认：15,单位：秒）
@@ -274,12 +285,34 @@ public class ChestnutClient {
         }
 
         /**
+         * 设置读取超时时间
+         *
+         * @param timeout  超时时间（默认：15,单位：秒）
+         * @param timeUnit 时间单位
+         */
+        public Builder setReadTimeout(long timeout, TimeUnit timeUnit) {
+            this.readTimeout = timeUnit.toSeconds(timeout);
+            return this;
+        }
+
+        /**
          * 设置写入超时时间
          *
          * @param timeout 超时时间（默认：15,单位：秒）
          */
         public Builder setWriteTimeout(long timeout) {
             this.writeTimeout = timeout;
+            return this;
+        }
+
+        /**
+         * 设置写入超时时间
+         *
+         * @param timeout  超时时间（默认：15,单位：秒）
+         * @param timeUnit 时间单位
+         */
+        public Builder setWriteTimeout(long timeout, TimeUnit timeUnit) {
+            this.writeTimeout = timeUnit.toSeconds(timeout);
             return this;
         }
 
@@ -312,6 +345,17 @@ public class ChestnutClient {
          */
         public Builder setAliveDuration(long aliveDuration) {
             this.aliveDuration = aliveDuration;
+            return this;
+        }
+
+        /**
+         * 设置连接存活时长
+         *
+         * @param aliveDuration 　连接存活时长（默认：5，单位：分）
+         * @param TimeUnit      时间单位
+         */
+        public Builder setAliveDuration(long aliveDuration, TimeUnit TimeUnit) {
+            this.aliveDuration = TimeUnit.toMinutes(aliveDuration);
             return this;
         }
 
@@ -358,10 +402,21 @@ public class ChestnutClient {
         /**
          * 设置默认缓存时间
          *
-         * @param cacheTime 　缓存模式（默认：60,单位：秒）
+         * @param cacheTime 　缓存时间（默认：60,单位：秒）
          */
         public Builder setDefaultCacheTime(long cacheTime) {
             this.defaultCacheTime = cacheTime;
+            return this;
+        }
+
+        /**
+         * 设置默认缓存时间
+         *
+         * @param cacheTime 　缓存时间（默认：60,单位：秒）
+         * @param timeUnit  时间单位
+         */
+        public Builder setDefaultCacheTime(long cacheTime, TimeUnit timeUnit) {
+            this.defaultCacheTime = timeUnit.toSeconds(cacheTime);
             return this;
         }
 
@@ -409,14 +464,20 @@ public class ChestnutClient {
 
         /**
          * https不认证，即certificates留空<p>
-         * 注意：不认证会信任所有证书,不安全！有风险！<p>
-         * <p>
+         * 注意：不认证会信任所有证书,不安全！有风险！
+         */
+        public Builder setCertificates() {
+            setSingleCertificates();
+            return this;
+        }
+
+        /**
          * https单向认证（证书请置于Assets目录中）
          *
          * @param certificates 服务器公钥证书名
          */
-        public Builder setCertificates(String... certificates) {
-            setCertificates(null, null, certificates);
+        public Builder setSingleCertificates(String... certificates) {
+            setDoubleCertificates(null, null, certificates);
             return this;
         }
 
@@ -427,7 +488,7 @@ public class ChestnutClient {
          * @param password     bks证书密码
          * @param certificates 服务器公钥证书名
          */
-        public Builder setCertificates(String bksFileName, String password, String...
+        public Builder setDoubleCertificates(String bksFileName, String password, String...
                 certificates) {
             HttpsUtil.SSLParams sslParams = HttpsUtil.getSslSocketFactory(app,
                     bksFileName, password, certificates);
@@ -835,8 +896,8 @@ public class ChestnutClient {
             CacheInfo cacheInfo = getCacheInfo(url, mode, groupKey, ownKey, cacheTime, timeUnit,
                     isSafe);
             Observable<ResponseBody> observable = server.getWithCache(url,
-                    getCacheInfoHeader(cacheInfo), headers, parameters);
-            return getCacheObservable(observable, mode, cacheInfo)
+                    cacheInfo.toString(), headers, parameters);
+            return getCacheObservable(observable, cacheInfo)
                     .subscribeOn(Schedulers.io())
                     .compose(getJsonTransformer(tClass));
         }
@@ -1059,8 +1120,8 @@ public class ChestnutClient {
             CacheInfo cacheInfo = getCacheInfo(url, mode, groupKey, ownKey, cacheTime, timeUnit,
                     isSafe);
             Observable<ResponseBody> observable = server.postWithCache(url,
-                    getCacheInfoHeader(cacheInfo), headers, parameters);
-            return getCacheObservable(observable, mode, cacheInfo)
+                    cacheInfo.toString(), headers, parameters);
+            return getCacheObservable(observable, cacheInfo)
                     .subscribeOn(Schedulers.io())
                     .compose(getJsonTransformer(tClass));
         }
@@ -1263,8 +1324,8 @@ public class ChestnutClient {
             CacheInfo cacheInfo = getCacheInfo(url, mode, groupKey, ownKey, cacheTime, timeUnit,
                     isSafe);
             Observable<ResponseBody> observable = server.bodyWithCache(url,
-                    getCacheInfoHeader(cacheInfo), headers, parameter);
-            return getCacheObservable(observable, mode, cacheInfo)
+                    cacheInfo.toString(), headers, parameter);
+            return getCacheObservable(observable, cacheInfo)
                     .subscribeOn(Schedulers.io())
                     .compose(getJsonTransformer(tClass));
         }
@@ -1391,6 +1452,111 @@ public class ChestnutClient {
         }
     }
 
+    //#################### CACHE ####################
+
+    public <T> Observable<T> cache(Observable<T> originObservable, CacheInfo cacheInfo,
+                                   final Class<T> tClass) {
+        Observable<T> resultObservable = originObservable;
+        if (cacheInfo.getMode() == CacheMode.CACHEANDREQUEST &&
+                DataStorage.contains(CacheEntity.class, cacheInfo.getId())) {
+            CacheEntity entity = CacheManager.getCache(cacheInfo);
+            if (entity != null) {
+                if (CUNet.isNetworkAvailable(Chestnut.getContext()) && entity.isExpire())
+                    CacheManager.removeCache(cacheInfo);
+                else
+                    resultObservable = Observable.mergeDelayError(
+                            Observable.just(entity.createResponseBody())
+                                    .compose(getJsonTransformer(tClass)),
+                            originObservable);
+            }
+        }
+        return resultObservable;
+    }
+
+    public CacheInfoBuilder getCacheInfoBuilder(String url) {
+        return new CacheInfoBuilder(url);
+    }
+
+    public class CacheInfoBuilder {
+
+        private final String url;
+        private CacheMode mode = defaultCacheMode;
+        private String groupKey = null;
+        private String ownKey = null;
+        private long cacheTime = defaultCacheTime;
+        private TimeUnit timeUnit = TimeUnit.SECONDS;
+        private boolean isSafe = false;
+
+        public CacheInfoBuilder(String url) {
+            this.url = url;
+        }
+
+        /**
+         * 设置缓存模式
+         *
+         * @param mode 缓存模式
+         */
+        public CacheInfoBuilder setCacheMode(CacheMode mode) {
+            this.mode = mode;
+            return this;
+        }
+
+        /**
+         * 设置缓存分组key
+         *
+         * @param groupKey 缓存分组key
+         */
+        public CacheInfoBuilder setGroupKe(String groupKey) {
+            this.groupKey = groupKey;
+            return this;
+        }
+
+        /**
+         * 设置缓存独立key
+         *
+         * @param ownKey 缓存独立key
+         */
+        public CacheInfoBuilder setOwnKey(String ownKey) {
+            this.ownKey = ownKey;
+            return this;
+        }
+
+        /**
+         * 设置缓存时间
+         *
+         * @param cacheTime 缓存时间（单位：秒）
+         */
+        public CacheInfoBuilder setCacheTime(long cacheTime) {
+            this.cacheTime = cacheTime;
+            return this;
+        }
+
+        /**
+         * 设置缓存时间
+         *
+         * @param cacheTime 缓存时间
+         * @param timeUnit  时间单位
+         */
+        public CacheInfoBuilder setCacheTime(long cacheTime, TimeUnit timeUnit) {
+            this.cacheTime = timeUnit.toSeconds(cacheTime);
+            return this;
+        }
+
+        /**
+         * 设置缓存安全模式（永久保存）
+         *
+         * @param isSafe 缓存安全模式
+         */
+        public CacheInfoBuilder isSafe(boolean isSafe) {
+            this.isSafe = isSafe;
+            return this;
+        }
+
+        public CacheInfo build() {
+            return getCacheInfo(url, mode, groupKey, ownKey, cacheTime, timeUnit, isSafe);
+        }
+    }
+
     //#################### TOOLS ####################
     private <T> ObservableTransformer<ResponseBody, T> getJsonTransformer(final Class<T> tClass) {
         return new ObservableTransformer<ResponseBody, T>() {
@@ -1410,9 +1576,9 @@ public class ChestnutClient {
     }
 
     private Observable<ResponseBody> getCacheObservable(Observable<ResponseBody> observable,
-                                                        CacheMode mode, CacheInfo cacheInfo) {
+                                                        CacheInfo cacheInfo) {
         Observable<ResponseBody> resultObservable = observable;
-        if (mode == CacheMode.CACHEANDREQUEST &&
+        if (cacheInfo.getMode() == CacheMode.CACHEANDREQUEST &&
                 DataStorage.contains(CacheEntity.class, cacheInfo.getId())) {
             CacheEntity entity = CacheManager.getCache(cacheInfo);
             if (entity != null) {
@@ -1435,10 +1601,6 @@ public class ChestnutClient {
                                    boolean isSafe) {
         return new CacheInfo(CacheManager.getId(url, groupKey, ownKey),
                 CacheManager.getLocalExpire(cacheTime, timeUnit), isSafe, mode);
-    }
-
-    private String getCacheInfoHeader(CacheInfo cacheInfo) {
-        return JSON.toJSONString(cacheInfo);
     }
 
     private UploadRequestBody getUploadBody(Map<String, Object> parameters,

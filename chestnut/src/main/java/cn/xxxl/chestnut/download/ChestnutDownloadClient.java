@@ -8,6 +8,7 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
+import java.io.File;
 import java.util.concurrent.Semaphore;
 
 import cn.xxxl.chestnut.download.core.DownloadManager;
@@ -35,7 +36,7 @@ public class ChestnutDownloadClient {
     private int maxConnectCount;
     private int maxRetryCount;
     private int maxTaskCount;
-    private String defaultSavePath;
+    private File defaultDownloadFile;
 
     private DownloadManager manager;
     private DownloadService service;
@@ -54,9 +55,9 @@ public class ChestnutDownloadClient {
         this.maxConnectCount = builder.maxConnectCount;
         this.maxRetryCount = builder.maxRetryCount;
         this.maxTaskCount = builder.maxTaskCount;
-        this.defaultSavePath = builder.defaultSavePath;
+        this.defaultDownloadFile = builder.defaultDownloadFile;
         this.manager = new DownloadManager(this.maxRetryCount,
-                this.maxConnectCount, this.defaultSavePath);
+                this.maxConnectCount, this.defaultDownloadFile.getPath());
     }
 
 
@@ -80,11 +81,11 @@ public class ChestnutDownloadClient {
         private int maxConnectCount = DEFAULT_CONNECTIONCOUNT;
         private int maxRetryCount = DEFAULT_RETRYCOUNT;
         private int maxTaskCount = DEFAULT_TASKCOUNT;
-        private String defaultSavePath;
+        private File defaultDownloadFile;
 
         public Builder(Application app) {
             this.app = app;
-            defaultSavePath = this.app.getExternalFilesDir(Context.DOWNLOAD_SERVICE).getPath();
+            defaultDownloadFile = this.app.getExternalFilesDir(Context.DOWNLOAD_SERVICE);
         }
 
         /**
@@ -119,13 +120,13 @@ public class ChestnutDownloadClient {
         }
 
         /**
-         * 文件保存路径
+         * 设置默认下载路径
          *
-         * @param savePath default = ExternalFilesDir_DOWNLOAD_SERVICE
+         * @param defaultDownloadFile default = ExternalFilesDir_DOWNLOAD_SERVICE
          * @return Builder
          */
-        public Builder setDefaultSavePath(String savePath) {
-            this.defaultSavePath = savePath;
+        public Builder setDefaultDownloadFile(File defaultDownloadFile) {
+            this.defaultDownloadFile = defaultDownloadFile;
             return this;
         }
 
@@ -222,7 +223,7 @@ public class ChestnutDownloadClient {
         intent.putExtra(DownloadService.CONNECT_COUNT, maxConnectCount)
                 .putExtra(DownloadService.RETRY_COUNT, maxRetryCount)
                 .putExtra(DownloadService.TASK_COUNT, maxTaskCount)
-                .putExtra(DownloadService.SAVE_PATH, defaultSavePath);
+                .putExtra(DownloadService.SAVE_PATH, defaultDownloadFile.getPath());
         app.startService(intent);
         app.bindService(intent, new ServiceConnection() {
 
